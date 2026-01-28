@@ -1,8 +1,12 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
-import { db } from "@repo/db";
-import { contacts } from "@repo/db/schema";
-import { eq } from "drizzle-orm";
+import {
+  getContacts,
+  getContactById,
+  createContact,
+  updateContact,
+  deleteContact,
+} from "../lib/db/contacts";
 
 const contactRoleSchema = z.enum([
   "decision_maker",
@@ -37,61 +41,39 @@ const createContactSchema = z.object({
 const updateContactSchema = createContactSchema.partial();
 
 export const contactsRoutes = new Elysia({ prefix: "/contacts" })
-  // GET /contacts - List all contacts
   .get("/", async () => {
-    const result = await db.select().from(contacts);
-    return result;
+    return getContacts();
   })
-  // POST /contacts - Create a new contact
   .post("/", async ({ body }) => {
-    const parsed = createContactSchema.parse(body);
-    const [result] = await db.insert(contacts).values(parsed).returning();
-    return result;
+    const data = createContactSchema.parse(body);
+    return createContact(data);
   })
-  // GET /contacts/:id - Get a single contact
   .get("/:id", async ({ params }) => {
-    const [result] = await db
-      .select()
-      .from(contacts)
-      .where(eq(contacts.id, params.id));
-    if (!result) {
+    const contact = await getContactById(params.id);
+    if (!contact) {
       return { error: "Contact not found" };
     }
-    return result;
+    return contact;
   })
-  // PUT /contacts/:id - Replace a contact
   .put("/:id", async ({ params, body }) => {
-    const parsed = createContactSchema.parse(body);
-    const [result] = await db
-      .update(contacts)
-      .set({ ...parsed, updatedAt: new Date() })
-      .where(eq(contacts.id, params.id))
-      .returning();
-    if (!result) {
+    const data = createContactSchema.parse(body);
+    const contact = await updateContact(params.id, data);
+    if (!contact) {
       return { error: "Contact not found" };
     }
-    return result;
+    return contact;
   })
-  // PATCH /contacts/:id - Partial update a contact
   .patch("/:id", async ({ params, body }) => {
-    const parsed = updateContactSchema.parse(body);
-    const [result] = await db
-      .update(contacts)
-      .set({ ...parsed, updatedAt: new Date() })
-      .where(eq(contacts.id, params.id))
-      .returning();
-    if (!result) {
+    const data = updateContactSchema.parse(body);
+    const contact = await updateContact(params.id, data);
+    if (!contact) {
       return { error: "Contact not found" };
     }
-    return result;
+    return contact;
   })
-  // DELETE /contacts/:id - Delete a contact
   .delete("/:id", async ({ params }) => {
-    const [result] = await db
-      .delete(contacts)
-      .where(eq(contacts.id, params.id))
-      .returning();
-    if (!result) {
+    const contact = await deleteContact(params.id);
+    if (!contact) {
       return { error: "Contact not found" };
     }
     return { success: true };

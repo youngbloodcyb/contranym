@@ -1,8 +1,12 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
-import { db } from "@repo/db";
-import { notes } from "@repo/db/schema";
-import { eq } from "drizzle-orm";
+import {
+  getNotes,
+  getNoteById,
+  createNote,
+  updateNote,
+  deleteNote,
+} from "../lib/db/notes";
 
 const createNoteSchema = z.object({
   content: z.string(),
@@ -15,61 +19,39 @@ const createNoteSchema = z.object({
 const updateNoteSchema = createNoteSchema.partial();
 
 export const notesRoutes = new Elysia({ prefix: "/notes" })
-  // GET /notes - List all notes
   .get("/", async () => {
-    const result = await db.select().from(notes);
-    return result;
+    return getNotes();
   })
-  // POST /notes - Create a new note
   .post("/", async ({ body }) => {
-    const parsed = createNoteSchema.parse(body);
-    const [result] = await db.insert(notes).values(parsed).returning();
-    return result;
+    const data = createNoteSchema.parse(body);
+    return createNote(data);
   })
-  // GET /notes/:id - Get a single note
   .get("/:id", async ({ params }) => {
-    const [result] = await db
-      .select()
-      .from(notes)
-      .where(eq(notes.id, params.id));
-    if (!result) {
+    const note = await getNoteById(params.id);
+    if (!note) {
       return { error: "Note not found" };
     }
-    return result;
+    return note;
   })
-  // PUT /notes/:id - Replace a note
   .put("/:id", async ({ params, body }) => {
-    const parsed = createNoteSchema.parse(body);
-    const [result] = await db
-      .update(notes)
-      .set({ ...parsed, updatedAt: new Date() })
-      .where(eq(notes.id, params.id))
-      .returning();
-    if (!result) {
+    const data = createNoteSchema.parse(body);
+    const note = await updateNote(params.id, data);
+    if (!note) {
       return { error: "Note not found" };
     }
-    return result;
+    return note;
   })
-  // PATCH /notes/:id - Partial update a note
   .patch("/:id", async ({ params, body }) => {
-    const parsed = updateNoteSchema.parse(body);
-    const [result] = await db
-      .update(notes)
-      .set({ ...parsed, updatedAt: new Date() })
-      .where(eq(notes.id, params.id))
-      .returning();
-    if (!result) {
+    const data = updateNoteSchema.parse(body);
+    const note = await updateNote(params.id, data);
+    if (!note) {
       return { error: "Note not found" };
     }
-    return result;
+    return note;
   })
-  // DELETE /notes/:id - Delete a note
   .delete("/:id", async ({ params }) => {
-    const [result] = await db
-      .delete(notes)
-      .where(eq(notes.id, params.id))
-      .returning();
-    if (!result) {
+    const note = await deleteNote(params.id);
+    if (!note) {
       return { error: "Note not found" };
     }
     return { success: true };

@@ -1,8 +1,12 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
-import { db } from "@repo/db";
-import { deals } from "@repo/db/schema";
-import { eq } from "drizzle-orm";
+import {
+  getDeals,
+  getDealById,
+  createDeal,
+  updateDeal,
+  deleteDeal,
+} from "../lib/db/deals";
 
 const dealStageSchema = z.enum([
   "discovery",
@@ -35,61 +39,39 @@ const createDealSchema = z.object({
 const updateDealSchema = createDealSchema.partial();
 
 export const dealsRoutes = new Elysia({ prefix: "/deals" })
-  // GET /deals - List all deals
   .get("/", async () => {
-    const result = await db.select().from(deals);
-    return result;
+    return getDeals();
   })
-  // POST /deals - Create a new deal
   .post("/", async ({ body }) => {
-    const parsed = createDealSchema.parse(body);
-    const [result] = await db.insert(deals).values(parsed).returning();
-    return result;
+    const data = createDealSchema.parse(body);
+    return createDeal(data);
   })
-  // GET /deals/:id - Get a single deal
   .get("/:id", async ({ params }) => {
-    const [result] = await db
-      .select()
-      .from(deals)
-      .where(eq(deals.id, params.id));
-    if (!result) {
+    const deal = await getDealById(params.id);
+    if (!deal) {
       return { error: "Deal not found" };
     }
-    return result;
+    return deal;
   })
-  // PUT /deals/:id - Replace a deal
   .put("/:id", async ({ params, body }) => {
-    const parsed = createDealSchema.parse(body);
-    const [result] = await db
-      .update(deals)
-      .set({ ...parsed, updatedAt: new Date() })
-      .where(eq(deals.id, params.id))
-      .returning();
-    if (!result) {
+    const data = createDealSchema.parse(body);
+    const deal = await updateDeal(params.id, data);
+    if (!deal) {
       return { error: "Deal not found" };
     }
-    return result;
+    return deal;
   })
-  // PATCH /deals/:id - Partial update a deal
   .patch("/:id", async ({ params, body }) => {
-    const parsed = updateDealSchema.parse(body);
-    const [result] = await db
-      .update(deals)
-      .set({ ...parsed, updatedAt: new Date() })
-      .where(eq(deals.id, params.id))
-      .returning();
-    if (!result) {
+    const data = updateDealSchema.parse(body);
+    const deal = await updateDeal(params.id, data);
+    if (!deal) {
       return { error: "Deal not found" };
     }
-    return result;
+    return deal;
   })
-  // DELETE /deals/:id - Delete a deal
   .delete("/:id", async ({ params }) => {
-    const [result] = await db
-      .delete(deals)
-      .where(eq(deals.id, params.id))
-      .returning();
-    if (!result) {
+    const deal = await deleteDeal(params.id);
+    if (!deal) {
       return { error: "Deal not found" };
     }
     return { success: true };

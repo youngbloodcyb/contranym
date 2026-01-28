@@ -1,8 +1,12 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
-import { db } from "@repo/db";
-import { accounts } from "@repo/db/schema";
-import { eq } from "drizzle-orm";
+import {
+  getAccounts,
+  getAccountById,
+  createAccount,
+  updateAccount,
+  deleteAccount,
+} from "../lib/db/accounts";
 
 const accountStageSchema = z.enum([
   "prospect",
@@ -32,61 +36,39 @@ const createAccountSchema = z.object({
 const updateAccountSchema = createAccountSchema.partial();
 
 export const accountsRoutes = new Elysia({ prefix: "/accounts" })
-  // GET /accounts - List all accounts
   .get("/", async () => {
-    const result = await db.select().from(accounts);
-    return result;
+    return getAccounts();
   })
-  // POST /accounts - Create a new account
   .post("/", async ({ body }) => {
-    const parsed = createAccountSchema.parse(body);
-    const [result] = await db.insert(accounts).values(parsed).returning();
-    return result;
+    const data = createAccountSchema.parse(body);
+    return createAccount(data);
   })
-  // GET /accounts/:id - Get a single account
   .get("/:id", async ({ params }) => {
-    const [result] = await db
-      .select()
-      .from(accounts)
-      .where(eq(accounts.id, params.id));
-    if (!result) {
+    const account = await getAccountById(params.id);
+    if (!account) {
       return { error: "Account not found" };
     }
-    return result;
+    return account;
   })
-  // PUT /accounts/:id - Replace an account
   .put("/:id", async ({ params, body }) => {
-    const parsed = createAccountSchema.parse(body);
-    const [result] = await db
-      .update(accounts)
-      .set({ ...parsed, updatedAt: new Date() })
-      .where(eq(accounts.id, params.id))
-      .returning();
-    if (!result) {
+    const data = createAccountSchema.parse(body);
+    const account = await updateAccount(params.id, data);
+    if (!account) {
       return { error: "Account not found" };
     }
-    return result;
+    return account;
   })
-  // PATCH /accounts/:id - Partial update an account
   .patch("/:id", async ({ params, body }) => {
-    const parsed = updateAccountSchema.parse(body);
-    const [result] = await db
-      .update(accounts)
-      .set({ ...parsed, updatedAt: new Date() })
-      .where(eq(accounts.id, params.id))
-      .returning();
-    if (!result) {
+    const data = updateAccountSchema.parse(body);
+    const account = await updateAccount(params.id, data);
+    if (!account) {
       return { error: "Account not found" };
     }
-    return result;
+    return account;
   })
-  // DELETE /accounts/:id - Delete an account
   .delete("/:id", async ({ params }) => {
-    const [result] = await db
-      .delete(accounts)
-      .where(eq(accounts.id, params.id))
-      .returning();
-    if (!result) {
+    const account = await deleteAccount(params.id);
+    if (!account) {
       return { error: "Account not found" };
     }
     return { success: true };

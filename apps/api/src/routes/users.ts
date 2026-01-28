@@ -1,8 +1,12 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
-import { db } from "@repo/db";
-import { users } from "@repo/db/schema";
-import { eq } from "drizzle-orm";
+import {
+  getUsers,
+  getUserById,
+  createUser,
+  updateUser,
+  deleteUser,
+} from "../lib/db/users";
 
 const createUserSchema = z.object({
   email: z.string(),
@@ -12,70 +16,42 @@ const createUserSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-const updateUserSchema = z.object({
-  email: z.string().optional(),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  role: z.string().optional(),
-  isActive: z.boolean().optional(),
-});
+const updateUserSchema = createUserSchema.partial();
 
 export const usersRoutes = new Elysia({ prefix: "/users" })
-  // GET /users - List all users
   .get("/", async () => {
-    const result = await db.select().from(users);
-    return result;
+    return getUsers();
   })
-  // POST /users - Create a new user
   .post("/", async ({ body }) => {
-    const parsed = createUserSchema.parse(body);
-    const [result] = await db.insert(users).values(parsed).returning();
-    return result;
+    const data = createUserSchema.parse(body);
+    return createUser(data);
   })
-  // GET /users/:id - Get a single user
   .get("/:id", async ({ params }) => {
-    const [result] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, params.id));
-    if (!result) {
+    const user = await getUserById(params.id);
+    if (!user) {
       return { error: "User not found" };
     }
-    return result;
+    return user;
   })
-  // PUT /users/:id - Replace a user
   .put("/:id", async ({ params, body }) => {
-    const parsed = createUserSchema.parse(body);
-    const [result] = await db
-      .update(users)
-      .set({ ...parsed, updatedAt: new Date() })
-      .where(eq(users.id, params.id))
-      .returning();
-    if (!result) {
+    const data = createUserSchema.parse(body);
+    const user = await updateUser(params.id, data);
+    if (!user) {
       return { error: "User not found" };
     }
-    return result;
+    return user;
   })
-  // PATCH /users/:id - Partial update a user
   .patch("/:id", async ({ params, body }) => {
-    const parsed = updateUserSchema.parse(body);
-    const [result] = await db
-      .update(users)
-      .set({ ...parsed, updatedAt: new Date() })
-      .where(eq(users.id, params.id))
-      .returning();
-    if (!result) {
+    const data = updateUserSchema.parse(body);
+    const user = await updateUser(params.id, data);
+    if (!user) {
       return { error: "User not found" };
     }
-    return result;
+    return user;
   })
-  // DELETE /users/:id - Delete a user
   .delete("/:id", async ({ params }) => {
-    const [result] = await db
-      .delete(users)
-      .where(eq(users.id, params.id))
-      .returning();
-    if (!result) {
+    const user = await deleteUser(params.id);
+    if (!user) {
       return { error: "User not found" };
     }
     return { success: true };

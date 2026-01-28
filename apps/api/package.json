@@ -9,6 +9,7 @@
   "dependencies": {
     "@elysiajs/openapi": "^1.4.14",
     "@repo/db": "*",
+    "drizzle-orm": "^0.45.1",
     "elysia": "latest",
     "zod": "^4.3.6"
   },

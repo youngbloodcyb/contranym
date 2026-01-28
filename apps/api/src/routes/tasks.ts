@@ -1,8 +1,12 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
-import { db } from "@repo/db";
-import { tasks } from "@repo/db/schema";
-import { eq } from "drizzle-orm";
+import {
+  getTasks,
+  getTaskById,
+  createTask,
+  updateTask,
+  deleteTask,
+} from "../lib/db/tasks";
 
 const taskStatusSchema = z.enum([
   "pending",
@@ -30,61 +34,39 @@ const createTaskSchema = z.object({
 const updateTaskSchema = createTaskSchema.partial();
 
 export const tasksRoutes = new Elysia({ prefix: "/tasks" })
-  // GET /tasks - List all tasks
   .get("/", async () => {
-    const result = await db.select().from(tasks);
-    return result;
+    return getTasks();
   })
-  // POST /tasks - Create a new task
   .post("/", async ({ body }) => {
-    const parsed = createTaskSchema.parse(body);
-    const [result] = await db.insert(tasks).values(parsed).returning();
-    return result;
+    const data = createTaskSchema.parse(body);
+    return createTask(data);
   })
-  // GET /tasks/:id - Get a single task
   .get("/:id", async ({ params }) => {
-    const [result] = await db
-      .select()
-      .from(tasks)
-      .where(eq(tasks.id, params.id));
-    if (!result) {
+    const task = await getTaskById(params.id);
+    if (!task) {
       return { error: "Task not found" };
     }
-    return result;
+    return task;
   })
-  // PUT /tasks/:id - Replace a task
   .put("/:id", async ({ params, body }) => {
-    const parsed = createTaskSchema.parse(body);
-    const [result] = await db
-      .update(tasks)
-      .set({ ...parsed, updatedAt: new Date() })
-      .where(eq(tasks.id, params.id))
-      .returning();
-    if (!result) {
+    const data = createTaskSchema.parse(body);
+    const task = await updateTask(params.id, data);
+    if (!task) {
       return { error: "Task not found" };
     }
-    return result;
+    return task;
   })
-  // PATCH /tasks/:id - Partial update a task
   .patch("/:id", async ({ params, body }) => {
-    const parsed = updateTaskSchema.parse(body);
-    const [result] = await db
-      .update(tasks)
-      .set({ ...parsed, updatedAt: new Date() })
-      .where(eq(tasks.id, params.id))
-      .returning();
-    if (!result) {
+    const data = updateTaskSchema.parse(body);
+    const task = await updateTask(params.id, data);
+    if (!task) {
       return { error: "Task not found" };
     }
-    return result;
+    return task;
   })
-  // DELETE /tasks/:id - Delete a task
   .delete("/:id", async ({ params }) => {
-    const [result] = await db
-      .delete(tasks)
-      .where(eq(tasks.id, params.id))
-      .returning();
-    if (!result) {
+    const task = await deleteTask(params.id);
+    if (!task) {
       return { error: "Task not found" };
     }
     return { success: true };
