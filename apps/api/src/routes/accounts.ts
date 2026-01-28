@@ -1,5 +1,4 @@
 import { Elysia } from "elysia";
-import { z } from "zod";
 import {
   getAccounts,
   getAccountById,
@@ -7,33 +6,10 @@ import {
   updateAccount,
   deleteAccount,
 } from "../lib/services/accounts";
-
-const accountStageSchema = z.enum([
-  "prospect",
-  "qualified",
-  "negotiation",
-  "closed_won",
-  "closed_lost",
-  "churned",
-  "active_customer",
-]);
-
-const createAccountSchema = z.object({
-  name: z.string(),
-  domain: z.string().optional(),
-  industry: z.string().optional(),
-  employeeCount: z.number().optional(),
-  annualRevenue: z.string().optional(),
-  stage: accountStageSchema.optional(),
-  description: z.string().optional(),
-  website: z.string().optional(),
-  phone: z.string().optional(),
-  linkedinUrl: z.string().optional(),
-  ownerId: z.string().optional(),
-  customFields: z.record(z.string(), z.unknown()).optional(),
-});
-
-const updateAccountSchema = createAccountSchema.partial();
+import {
+  createAccountSchema,
+  updateAccountSchema,
+} from "../lib/schemas/accounts";
 
 export const accountsRoutes = new Elysia({ prefix: "/accounts" })
   .get("/", async () => {

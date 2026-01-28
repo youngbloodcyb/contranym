@@ -1,5 +1,4 @@
 import { Elysia } from "elysia";
-import { z } from "zod";
 import {
   getTasks,
   getTaskById,
@@ -7,31 +6,7 @@ import {
   updateTask,
   deleteTask,
 } from "../lib/services/tasks";
-
-const taskStatusSchema = z.enum([
-  "pending",
-  "in_progress",
-  "completed",
-  "cancelled",
-]);
-
-const taskPrioritySchema = z.enum(["low", "medium", "high", "urgent"]);
-
-const createTaskSchema = z.object({
-  title: z.string(),
-  description: z.string().optional(),
-  status: taskStatusSchema.optional(),
-  priority: taskPrioritySchema.optional(),
-  dueDate: z.coerce.date().optional(),
-  completedAt: z.coerce.date().optional(),
-  accountId: z.string().optional(),
-  contactId: z.string().optional(),
-  dealId: z.string().optional(),
-  assignedToId: z.string().optional(),
-  createdById: z.string().optional(),
-});
-
-const updateTaskSchema = createTaskSchema.partial();
+import { createTaskSchema, updateTaskSchema } from "../lib/schemas/tasks";
 
 export const tasksRoutes = new Elysia({ prefix: "/tasks" })
   .get("/", async () => {

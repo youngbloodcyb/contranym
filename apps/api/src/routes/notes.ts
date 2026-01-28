@@ -1,5 +1,4 @@
 import { Elysia } from "elysia";
-import { z } from "zod";
 import {
   getNotes,
   getNoteById,
@@ -7,16 +6,7 @@ import {
   updateNote,
   deleteNote,
 } from "../lib/services/notes";
-
-const createNoteSchema = z.object({
-  content: z.string(),
-  accountId: z.string().optional(),
-  contactId: z.string().optional(),
-  dealId: z.string().optional(),
-  createdById: z.string().optional(),
-});
-
-const updateNoteSchema = createNoteSchema.partial();
+import { createNoteSchema, updateNoteSchema } from "../lib/schemas/notes";
 
 export const notesRoutes = new Elysia({ prefix: "/notes" })
   .get("/", async () => {

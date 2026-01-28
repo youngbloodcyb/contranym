@@ -1,5 +1,4 @@
 import { Elysia } from "elysia";
-import { z } from "zod";
 import {
   getUsers,
   getUserById,
@@ -7,16 +6,7 @@ import {
   updateUser,
   deleteUser,
 } from "../lib/services/users";
-
-const createUserSchema = z.object({
-  email: z.string(),
-  firstName: z.string(),
-  lastName: z.string(),
-  role: z.string().optional(),
-  isActive: z.boolean().optional(),
-});
-
-const updateUserSchema = createUserSchema.partial();
+import { createUserSchema, updateUserSchema } from "../lib/schemas/users";
 
 export const usersRoutes = new Elysia({ prefix: "/users" })
   .get("/", async () => {

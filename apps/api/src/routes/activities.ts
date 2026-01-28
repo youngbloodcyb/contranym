@@ -1,5 +1,4 @@
 import { Elysia } from "elysia";
-import { z } from "zod";
 import {
   getActivities,
   getActivityById,
@@ -7,35 +6,10 @@ import {
   updateActivity,
   deleteActivity,
 } from "../lib/services/activities";
-
-const activityTypeSchema = z.enum([
-  "call",
-  "email",
-  "meeting",
-  "note",
-  "task",
-  "demo",
-  "proposal_sent",
-  "contract_sent",
-  "other",
-]);
-
-const createActivitySchema = z.object({
-  type: activityTypeSchema,
-  subject: z.string(),
-  description: z.string().optional(),
-  accountId: z.string().optional(),
-  contactId: z.string().optional(),
-  dealId: z.string().optional(),
-  dueDate: z.coerce.date().optional(),
-  completedAt: z.coerce.date().optional(),
-  durationMinutes: z.number().optional(),
-  ownerId: z.string().optional(),
-  createdById: z.string().optional(),
-  customFields: z.record(z.string(), z.unknown()).optional(),
-});
-
-const updateActivitySchema = createActivitySchema.partial();
+import {
+  createActivitySchema,
+  updateActivitySchema,
+} from "../lib/schemas/activities";
 
 export const activitiesRoutes = new Elysia({ prefix: "/activities" })
   .get("/", async () => {

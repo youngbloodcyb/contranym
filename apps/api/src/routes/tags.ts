@@ -1,5 +1,4 @@
 import { Elysia } from "elysia";
-import { z } from "zod";
 import {
   getTags,
   getTagById,
@@ -7,13 +6,7 @@ import {
   updateTag,
   deleteTag,
 } from "../lib/services/tags";
-
-const createTagSchema = z.object({
-  name: z.string(),
-  color: z.string().optional(),
-});
-
-const updateTagSchema = createTagSchema.partial();
+import { createTagSchema, updateTagSchema } from "../lib/schemas/tags";
 
 export const tagsRoutes = new Elysia({ prefix: "/tags" })
   .get("/", async () => {

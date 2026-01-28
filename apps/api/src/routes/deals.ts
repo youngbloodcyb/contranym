@@ -1,5 +1,4 @@
 import { Elysia } from "elysia";
-import { z } from "zod";
 import {
   getDeals,
   getDealById,
@@ -7,36 +6,7 @@ import {
   updateDeal,
   deleteDeal,
 } from "../lib/services/deals";
-
-const dealStageSchema = z.enum([
-  "discovery",
-  "qualification",
-  "proposal",
-  "negotiation",
-  "closed_won",
-  "closed_lost",
-]);
-
-const createDealSchema = z.object({
-  name: z.string(),
-  accountId: z.string(),
-  primaryContactId: z.string().optional(),
-  ownerId: z.string().optional(),
-  stage: dealStageSchema.optional(),
-  amount: z.string().optional(),
-  currency: z.string().optional(),
-  probability: z.number().optional(),
-  expectedCloseDate: z.coerce.date().optional(),
-  actualCloseDate: z.coerce.date().optional(),
-  leadSource: z.string().optional(),
-  campaignId: z.string().optional(),
-  description: z.string().optional(),
-  nextSteps: z.string().optional(),
-  lossReason: z.string().optional(),
-  customFields: z.record(z.string(), z.unknown()).optional(),
-});
-
-const updateDealSchema = createDealSchema.partial();
+import { createDealSchema, updateDealSchema } from "../lib/schemas/deals";
 
 export const dealsRoutes = new Elysia({ prefix: "/deals" })
   .get("/", async () => {
