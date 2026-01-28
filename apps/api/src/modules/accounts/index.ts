@@ -5,13 +5,10 @@ import {
   createAccount,
   updateAccount,
   deleteAccount,
-} from "../lib/services/accounts";
-import {
-  createAccountSchema,
-  updateAccountSchema,
-} from "../lib/schemas/accounts";
+} from "./service";
+import { createAccountSchema, updateAccountSchema } from "./model";
 
-export const accountsRoutes = new Elysia({ prefix: "/accounts" })
+export const accounts = new Elysia({ prefix: "/accounts" })
   .get("/", async () => {
     return getAccounts();
   })

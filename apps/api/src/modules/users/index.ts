@@ -5,10 +5,10 @@ import {
   createUser,
   updateUser,
   deleteUser,
-} from "../lib/services/users";
-import { createUserSchema, updateUserSchema } from "../lib/schemas/users";
+} from "./service";
+import { createUserSchema, updateUserSchema } from "./model";
 
-export const usersRoutes = new Elysia({ prefix: "/users" })
+export const users = new Elysia({ prefix: "/users" })
   .get("/", async () => {
     return getUsers();
   })

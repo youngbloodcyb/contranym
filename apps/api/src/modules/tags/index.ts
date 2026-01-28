@@ -5,10 +5,10 @@ import {
   createTag,
   updateTag,
   deleteTag,
-} from "../lib/services/tags";
-import { createTagSchema, updateTagSchema } from "../lib/schemas/tags";
+} from "./service";
+import { createTagSchema, updateTagSchema } from "./model";
 
-export const tagsRoutes = new Elysia({ prefix: "/tags" })
+export const tags = new Elysia({ prefix: "/tags" })
   .get("/", async () => {
     return getTags();
   })

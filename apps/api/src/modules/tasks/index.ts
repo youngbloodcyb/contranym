@@ -5,10 +5,10 @@ import {
   createTask,
   updateTask,
   deleteTask,
-} from "../lib/services/tasks";
-import { createTaskSchema, updateTaskSchema } from "../lib/schemas/tasks";
+} from "./service";
+import { createTaskSchema, updateTaskSchema } from "./model";
 
-export const tasksRoutes = new Elysia({ prefix: "/tasks" })
+export const tasks = new Elysia({ prefix: "/tasks" })
   .get("/", async () => {
     return getTasks();
   })

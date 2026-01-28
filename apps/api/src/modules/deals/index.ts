@@ -5,10 +5,10 @@ import {
   createDeal,
   updateDeal,
   deleteDeal,
-} from "../lib/services/deals";
-import { createDealSchema, updateDealSchema } from "../lib/schemas/deals";
+} from "./service";
+import { createDealSchema, updateDealSchema } from "./model";
 
-export const dealsRoutes = new Elysia({ prefix: "/deals" })
+export const deals = new Elysia({ prefix: "/deals" })
   .get("/", async () => {
     return getDeals();
   })

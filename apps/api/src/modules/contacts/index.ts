@@ -5,13 +5,10 @@ import {
   createContact,
   updateContact,
   deleteContact,
-} from "../lib/services/contacts";
-import {
-  createContactSchema,
-  updateContactSchema,
-} from "../lib/schemas/contacts";
+} from "./service";
+import { createContactSchema, updateContactSchema } from "./model";
 
-export const contactsRoutes = new Elysia({ prefix: "/contacts" })
+export const contacts = new Elysia({ prefix: "/contacts" })
   .get("/", async () => {
     return getContacts();
   })

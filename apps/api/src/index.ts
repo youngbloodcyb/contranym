@@ -1,26 +1,26 @@
 import { Elysia } from "elysia";
 import { openapi } from "@elysiajs/openapi";
-import { usersRoutes } from "./routes/users";
-import { accountsRoutes } from "./routes/accounts";
-import { contactsRoutes } from "./routes/contacts";
-import { dealsRoutes } from "./routes/deals";
-import { activitiesRoutes } from "./routes/activities";
-import { tasksRoutes } from "./routes/tasks";
-import { notesRoutes } from "./routes/notes";
-import { tagsRoutes } from "./routes/tags";
+import { users } from "./modules/users";
+import { accounts } from "./modules/accounts";
+import { contacts } from "./modules/contacts";
+import { deals } from "./modules/deals";
+import { activities } from "./modules/activities";
+import { tasks } from "./modules/tasks";
+import { notes } from "./modules/notes";
+import { tags } from "./modules/tags";
 
 const app = new Elysia()
   .use(openapi())
   .get("/", () => {
     return { message: "Hello, World!" };
   })
-  .use(usersRoutes)
-  .use(accountsRoutes)
-  .use(contactsRoutes)
-  .use(dealsRoutes)
-  .use(activitiesRoutes)
-  .use(tasksRoutes)
-  .use(notesRoutes)
-  .use(tagsRoutes);
+  .use(users)
+  .use(accounts)
+  .use(contacts)
+  .use(deals)
+  .use(activities)
+  .use(tasks)
+  .use(notes)
+  .use(tags);
 
 export default app;

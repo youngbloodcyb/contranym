@@ -5,10 +5,10 @@ import {
   createNote,
   updateNote,
   deleteNote,
-} from "../lib/services/notes";
-import { createNoteSchema, updateNoteSchema } from "../lib/schemas/notes";
+} from "./service";
+import { createNoteSchema, updateNoteSchema } from "./model";
 
-export const notesRoutes = new Elysia({ prefix: "/notes" })
+export const notes = new Elysia({ prefix: "/notes" })
   .get("/", async () => {
     return getNotes();
   })

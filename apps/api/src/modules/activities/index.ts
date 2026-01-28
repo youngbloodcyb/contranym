@@ -5,13 +5,10 @@ import {
   createActivity,
   updateActivity,
   deleteActivity,
-} from "../lib/services/activities";
-import {
-  createActivitySchema,
-  updateActivitySchema,
-} from "../lib/schemas/activities";
+} from "./service";
+import { createActivitySchema, updateActivitySchema } from "./model";
 
-export const activitiesRoutes = new Elysia({ prefix: "/activities" })
+export const activities = new Elysia({ prefix: "/activities" })
   .get("/", async () => {
     return getActivities();
   })
