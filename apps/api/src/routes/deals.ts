@@ -6,7 +6,7 @@ import {
   createDeal,
   updateDeal,
   deleteDeal,
-} from "../lib/db/deals";
+} from "../lib/services/deals";
 
 const dealStageSchema = z.enum([
   "discovery",
@@ -26,8 +26,8 @@ const createDealSchema = z.object({
   amount: z.string().optional(),
   currency: z.string().optional(),
   probability: z.number().optional(),
-  expectedCloseDate: z.string().optional(),
-  actualCloseDate: z.string().optional(),
+  expectedCloseDate: z.coerce.date().optional(),
+  actualCloseDate: z.coerce.date().optional(),
   leadSource: z.string().optional(),
   campaignId: z.string().optional(),
   description: z.string().optional(),

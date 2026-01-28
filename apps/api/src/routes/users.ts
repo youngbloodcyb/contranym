@@ -6,7 +6,7 @@ import {
   createUser,
   updateUser,
   deleteUser,
-} from "../lib/db/users";
+} from "../lib/services/users";
 
 const createUserSchema = z.object({
   email: z.string(),

@@ -6,7 +6,7 @@ import {
   createContact,
   updateContact,
   deleteContact,
-} from "../lib/db/contacts";
+} from "../lib/services/contacts";
 
 const contactRoleSchema = z.enum([
   "decision_maker",

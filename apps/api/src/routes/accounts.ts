@@ -6,7 +6,7 @@ import {
   createAccount,
   updateAccount,
   deleteAccount,
-} from "../lib/db/accounts";
+} from "../lib/services/accounts";
 
 const accountStageSchema = z.enum([
   "prospect",

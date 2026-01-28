@@ -6,7 +6,7 @@ import {
   createActivity,
   updateActivity,
   deleteActivity,
-} from "../lib/db/activities";
+} from "../lib/services/activities";
 
 const activityTypeSchema = z.enum([
   "call",
@@ -27,8 +27,8 @@ const createActivitySchema = z.object({
   accountId: z.string().optional(),
   contactId: z.string().optional(),
   dealId: z.string().optional(),
-  dueDate: z.string().optional(),
-  completedAt: z.string().optional(),
+  dueDate: z.coerce.date().optional(),
+  completedAt: z.coerce.date().optional(),
   durationMinutes: z.number().optional(),
   ownerId: z.string().optional(),
   createdById: z.string().optional(),

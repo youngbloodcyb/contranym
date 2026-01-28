@@ -6,7 +6,7 @@ import {
   createNote,
   updateNote,
   deleteNote,
-} from "../lib/db/notes";
+} from "../lib/services/notes";
 
 const createNoteSchema = z.object({
   content: z.string(),

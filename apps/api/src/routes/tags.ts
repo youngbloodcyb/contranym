@@ -6,7 +6,7 @@ import {
   createTag,
   updateTag,
   deleteTag,
-} from "../lib/db/tags";
+} from "../lib/services/tags";
 
 const createTagSchema = z.object({
   name: z.string(),

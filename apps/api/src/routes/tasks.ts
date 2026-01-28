@@ -6,7 +6,7 @@ import {
   createTask,
   updateTask,
   deleteTask,
-} from "../lib/db/tasks";
+} from "../lib/services/tasks";
 
 const taskStatusSchema = z.enum([
   "pending",
@@ -22,8 +22,8 @@ const createTaskSchema = z.object({
   description: z.string().optional(),
   status: taskStatusSchema.optional(),
   priority: taskPrioritySchema.optional(),
-  dueDate: z.string().optional(),
-  completedAt: z.string().optional(),
+  dueDate: z.coerce.date().optional(),
+  completedAt: z.coerce.date().optional(),
   accountId: z.string().optional(),
   contactId: z.string().optional(),
   dealId: z.string().optional(),
