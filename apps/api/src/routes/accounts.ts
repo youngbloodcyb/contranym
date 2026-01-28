@@ -1,7 +1,35 @@
-import { Elysia, t } from "elysia";
+import { Elysia } from "elysia";
+import { z } from "zod";
 import { db } from "@repo/db";
 import { accounts } from "@repo/db/schema";
 import { eq } from "drizzle-orm";
+
+const accountStageSchema = z.enum([
+  "prospect",
+  "qualified",
+  "negotiation",
+  "closed_won",
+  "closed_lost",
+  "churned",
+  "active_customer",
+]);
+
+const createAccountSchema = z.object({
+  name: z.string(),
+  domain: z.string().optional(),
+  industry: z.string().optional(),
+  employeeCount: z.number().optional(),
+  annualRevenue: z.string().optional(),
+  stage: accountStageSchema.optional(),
+  description: z.string().optional(),
+  website: z.string().optional(),
+  phone: z.string().optional(),
+  linkedinUrl: z.string().optional(),
+  ownerId: z.string().optional(),
+  customFields: z.record(z.string(), z.unknown()).optional(),
+});
+
+const updateAccountSchema = createAccountSchema.partial();
 
 export const accountsRoutes = new Elysia({ prefix: "/accounts" })
   // GET /accounts - List all accounts
@@ -10,39 +38,11 @@ export const accountsRoutes = new Elysia({ prefix: "/accounts" })
     return result;
   })
   // POST /accounts - Create a new account
-  .post(
-    "/",
-    async ({ body }) => {
-      const [result] = await db.insert(accounts).values(body).returning();
-      return result;
-    },
-    {
-      body: t.Object({
-        name: t.String(),
-        domain: t.Optional(t.String()),
-        industry: t.Optional(t.String()),
-        employeeCount: t.Optional(t.Number()),
-        annualRevenue: t.Optional(t.String()),
-        stage: t.Optional(
-          t.Union([
-            t.Literal("prospect"),
-            t.Literal("qualified"),
-            t.Literal("negotiation"),
-            t.Literal("closed_won"),
-            t.Literal("closed_lost"),
-            t.Literal("churned"),
-            t.Literal("active_customer"),
-          ])
-        ),
-        description: t.Optional(t.String()),
-        website: t.Optional(t.String()),
-        phone: t.Optional(t.String()),
-        linkedinUrl: t.Optional(t.String()),
-        ownerId: t.Optional(t.String()),
-        customFields: t.Optional(t.Record(t.String(), t.Unknown())),
-      }),
-    }
-  )
+  .post("/", async ({ body }) => {
+    const parsed = createAccountSchema.parse(body);
+    const [result] = await db.insert(accounts).values(parsed).returning();
+    return result;
+  })
   // GET /accounts/:id - Get a single account
   .get("/:id", async ({ params }) => {
     const [result] = await db
@@ -55,87 +55,31 @@ export const accountsRoutes = new Elysia({ prefix: "/accounts" })
     return result;
   })
   // PUT /accounts/:id - Replace an account
-  .put(
-    "/:id",
-    async ({ params, body }) => {
-      const [result] = await db
-        .update(accounts)
-        .set({ ...body, updatedAt: new Date() })
-        .where(eq(accounts.id, params.id))
-        .returning();
-      if (!result) {
-        return { error: "Account not found" };
-      }
-      return result;
-    },
-    {
-      body: t.Object({
-        name: t.String(),
-        domain: t.Optional(t.String()),
-        industry: t.Optional(t.String()),
-        employeeCount: t.Optional(t.Number()),
-        annualRevenue: t.Optional(t.String()),
-        stage: t.Optional(
-          t.Union([
-            t.Literal("prospect"),
-            t.Literal("qualified"),
-            t.Literal("negotiation"),
-            t.Literal("closed_won"),
-            t.Literal("closed_lost"),
-            t.Literal("churned"),
-            t.Literal("active_customer"),
-          ])
-        ),
-        description: t.Optional(t.String()),
-        website: t.Optional(t.String()),
-        phone: t.Optional(t.String()),
-        linkedinUrl: t.Optional(t.String()),
-        ownerId: t.Optional(t.String()),
-        customFields: t.Optional(t.Record(t.String(), t.Unknown())),
-      }),
+  .put("/:id", async ({ params, body }) => {
+    const parsed = createAccountSchema.parse(body);
+    const [result] = await db
+      .update(accounts)
+      .set({ ...parsed, updatedAt: new Date() })
+      .where(eq(accounts.id, params.id))
+      .returning();
+    if (!result) {
+      return { error: "Account not found" };
     }
-  )
+    return result;
+  })
   // PATCH /accounts/:id - Partial update an account
-  .patch(
-    "/:id",
-    async ({ params, body }) => {
-      const [result] = await db
-        .update(accounts)
-        .set({ ...body, updatedAt: new Date() })
-        .where(eq(accounts.id, params.id))
-        .returning();
-      if (!result) {
-        return { error: "Account not found" };
-      }
-      return result;
-    },
-    {
-      body: t.Object({
-        name: t.Optional(t.String()),
-        domain: t.Optional(t.String()),
-        industry: t.Optional(t.String()),
-        employeeCount: t.Optional(t.Number()),
-        annualRevenue: t.Optional(t.String()),
-        stage: t.Optional(
-          t.Union([
-            t.Literal("prospect"),
-            t.Literal("qualified"),
-            t.Literal("negotiation"),
-            t.Literal("closed_won"),
-            t.Literal("closed_lost"),
-            t.Literal("churned"),
-            t.Literal("active_customer"),
-          ])
-        ),
-        description: t.Optional(t.String()),
-        website: t.Optional(t.String()),
-        phone: t.Optional(t.String()),
-        linkedinUrl: t.Optional(t.String()),
-        ownerId: t.Optional(t.String()),
-        customFields: t.Optional(t.Record(t.String(), t.Unknown())),
-      }),
+  .patch("/:id", async ({ params, body }) => {
+    const parsed = updateAccountSchema.parse(body);
+    const [result] = await db
+      .update(accounts)
+      .set({ ...parsed, updatedAt: new Date() })
+      .where(eq(accounts.id, params.id))
+      .returning();
+    if (!result) {
+      return { error: "Account not found" };
     }
-  )
+    return result;
+  })
   // DELETE /accounts/:id - Delete an account
   .delete("/:id", async ({ params }) => {
     const [result] = await db

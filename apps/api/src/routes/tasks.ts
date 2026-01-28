@@ -1,21 +1,33 @@
-import { Elysia, t } from "elysia";
+import { Elysia } from "elysia";
+import { z } from "zod";
 import { db } from "@repo/db";
 import { tasks } from "@repo/db/schema";
 import { eq } from "drizzle-orm";
 
-const taskStatusSchema = t.Union([
-  t.Literal("pending"),
-  t.Literal("in_progress"),
-  t.Literal("completed"),
-  t.Literal("cancelled"),
+const taskStatusSchema = z.enum([
+  "pending",
+  "in_progress",
+  "completed",
+  "cancelled",
 ]);
 
-const taskPrioritySchema = t.Union([
-  t.Literal("low"),
-  t.Literal("medium"),
-  t.Literal("high"),
-  t.Literal("urgent"),
-]);
+const taskPrioritySchema = z.enum(["low", "medium", "high", "urgent"]);
+
+const createTaskSchema = z.object({
+  title: z.string(),
+  description: z.string().optional(),
+  status: taskStatusSchema.optional(),
+  priority: taskPrioritySchema.optional(),
+  dueDate: z.string().optional(),
+  completedAt: z.string().optional(),
+  accountId: z.string().optional(),
+  contactId: z.string().optional(),
+  dealId: z.string().optional(),
+  assignedToId: z.string().optional(),
+  createdById: z.string().optional(),
+});
+
+const updateTaskSchema = createTaskSchema.partial();
 
 export const tasksRoutes = new Elysia({ prefix: "/tasks" })
   // GET /tasks - List all tasks
@@ -24,28 +36,11 @@ export const tasksRoutes = new Elysia({ prefix: "/tasks" })
     return result;
   })
   // POST /tasks - Create a new task
-  .post(
-    "/",
-    async ({ body }) => {
-      const [result] = await db.insert(tasks).values(body).returning();
-      return result;
-    },
-    {
-      body: t.Object({
-        title: t.String(),
-        description: t.Optional(t.String()),
-        status: t.Optional(taskStatusSchema),
-        priority: t.Optional(taskPrioritySchema),
-        dueDate: t.Optional(t.String()),
-        completedAt: t.Optional(t.String()),
-        accountId: t.Optional(t.String()),
-        contactId: t.Optional(t.String()),
-        dealId: t.Optional(t.String()),
-        assignedToId: t.Optional(t.String()),
-        createdById: t.Optional(t.String()),
-      }),
-    }
-  )
+  .post("/", async ({ body }) => {
+    const parsed = createTaskSchema.parse(body);
+    const [result] = await db.insert(tasks).values(parsed).returning();
+    return result;
+  })
   // GET /tasks/:id - Get a single task
   .get("/:id", async ({ params }) => {
     const [result] = await db
@@ -58,65 +53,31 @@ export const tasksRoutes = new Elysia({ prefix: "/tasks" })
     return result;
   })
   // PUT /tasks/:id - Replace a task
-  .put(
-    "/:id",
-    async ({ params, body }) => {
-      const [result] = await db
-        .update(tasks)
-        .set({ ...body, updatedAt: new Date() })
-        .where(eq(tasks.id, params.id))
-        .returning();
-      if (!result) {
-        return { error: "Task not found" };
-      }
-      return result;
-    },
-    {
-      body: t.Object({
-        title: t.String(),
-        description: t.Optional(t.String()),
-        status: t.Optional(taskStatusSchema),
-        priority: t.Optional(taskPrioritySchema),
-        dueDate: t.Optional(t.String()),
-        completedAt: t.Optional(t.String()),
-        accountId: t.Optional(t.String()),
-        contactId: t.Optional(t.String()),
-        dealId: t.Optional(t.String()),
-        assignedToId: t.Optional(t.String()),
-        createdById: t.Optional(t.String()),
-      }),
+  .put("/:id", async ({ params, body }) => {
+    const parsed = createTaskSchema.parse(body);
+    const [result] = await db
+      .update(tasks)
+      .set({ ...parsed, updatedAt: new Date() })
+      .where(eq(tasks.id, params.id))
+      .returning();
+    if (!result) {
+      return { error: "Task not found" };
     }
-  )
+    return result;
+  })
   // PATCH /tasks/:id - Partial update a task
-  .patch(
-    "/:id",
-    async ({ params, body }) => {
-      const [result] = await db
-        .update(tasks)
-        .set({ ...body, updatedAt: new Date() })
-        .where(eq(tasks.id, params.id))
-        .returning();
-      if (!result) {
-        return { error: "Task not found" };
-      }
-      return result;
-    },
-    {
-      body: t.Object({
-        title: t.Optional(t.String()),
-        description: t.Optional(t.String()),
-        status: t.Optional(taskStatusSchema),
-        priority: t.Optional(taskPrioritySchema),
-        dueDate: t.Optional(t.String()),
-        completedAt: t.Optional(t.String()),
-        accountId: t.Optional(t.String()),
-        contactId: t.Optional(t.String()),
-        dealId: t.Optional(t.String()),
-        assignedToId: t.Optional(t.String()),
-        createdById: t.Optional(t.String()),
-      }),
+  .patch("/:id", async ({ params, body }) => {
+    const parsed = updateTaskSchema.parse(body);
+    const [result] = await db
+      .update(tasks)
+      .set({ ...parsed, updatedAt: new Date() })
+      .where(eq(tasks.id, params.id))
+      .returning();
+    if (!result) {
+      return { error: "Task not found" };
     }
-  )
+    return result;
+  })
   // DELETE /tasks/:id - Delete a task
   .delete("/:id", async ({ params }) => {
     const [result] = await db

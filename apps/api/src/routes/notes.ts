@@ -1,7 +1,18 @@
-import { Elysia, t } from "elysia";
+import { Elysia } from "elysia";
+import { z } from "zod";
 import { db } from "@repo/db";
 import { notes } from "@repo/db/schema";
 import { eq } from "drizzle-orm";
+
+const createNoteSchema = z.object({
+  content: z.string(),
+  accountId: z.string().optional(),
+  contactId: z.string().optional(),
+  dealId: z.string().optional(),
+  createdById: z.string().optional(),
+});
+
+const updateNoteSchema = createNoteSchema.partial();
 
 export const notesRoutes = new Elysia({ prefix: "/notes" })
   // GET /notes - List all notes
@@ -10,22 +21,11 @@ export const notesRoutes = new Elysia({ prefix: "/notes" })
     return result;
   })
   // POST /notes - Create a new note
-  .post(
-    "/",
-    async ({ body }) => {
-      const [result] = await db.insert(notes).values(body).returning();
-      return result;
-    },
-    {
-      body: t.Object({
-        content: t.String(),
-        accountId: t.Optional(t.String()),
-        contactId: t.Optional(t.String()),
-        dealId: t.Optional(t.String()),
-        createdById: t.Optional(t.String()),
-      }),
-    }
-  )
+  .post("/", async ({ body }) => {
+    const parsed = createNoteSchema.parse(body);
+    const [result] = await db.insert(notes).values(parsed).returning();
+    return result;
+  })
   // GET /notes/:id - Get a single note
   .get("/:id", async ({ params }) => {
     const [result] = await db
@@ -38,53 +38,31 @@ export const notesRoutes = new Elysia({ prefix: "/notes" })
     return result;
   })
   // PUT /notes/:id - Replace a note
-  .put(
-    "/:id",
-    async ({ params, body }) => {
-      const [result] = await db
-        .update(notes)
-        .set({ ...body, updatedAt: new Date() })
-        .where(eq(notes.id, params.id))
-        .returning();
-      if (!result) {
-        return { error: "Note not found" };
-      }
-      return result;
-    },
-    {
-      body: t.Object({
-        content: t.String(),
-        accountId: t.Optional(t.String()),
-        contactId: t.Optional(t.String()),
-        dealId: t.Optional(t.String()),
-        createdById: t.Optional(t.String()),
-      }),
+  .put("/:id", async ({ params, body }) => {
+    const parsed = createNoteSchema.parse(body);
+    const [result] = await db
+      .update(notes)
+      .set({ ...parsed, updatedAt: new Date() })
+      .where(eq(notes.id, params.id))
+      .returning();
+    if (!result) {
+      return { error: "Note not found" };
     }
-  )
+    return result;
+  })
   // PATCH /notes/:id - Partial update a note
-  .patch(
-    "/:id",
-    async ({ params, body }) => {
-      const [result] = await db
-        .update(notes)
-        .set({ ...body, updatedAt: new Date() })
-        .where(eq(notes.id, params.id))
-        .returning();
-      if (!result) {
-        return { error: "Note not found" };
-      }
-      return result;
-    },
-    {
-      body: t.Object({
-        content: t.Optional(t.String()),
-        accountId: t.Optional(t.String()),
-        contactId: t.Optional(t.String()),
-        dealId: t.Optional(t.String()),
-        createdById: t.Optional(t.String()),
-      }),
+  .patch("/:id", async ({ params, body }) => {
+    const parsed = updateNoteSchema.parse(body);
+    const [result] = await db
+      .update(notes)
+      .set({ ...parsed, updatedAt: new Date() })
+      .where(eq(notes.id, params.id))
+      .returning();
+    if (!result) {
+      return { error: "Note not found" };
     }
-  )
+    return result;
+  })
   // DELETE /notes/:id - Delete a note
   .delete("/:id", async ({ params }) => {
     const [result] = await db
