@@ -80,7 +80,10 @@ export const taskPriorityEnum = pgEnum("task_priority", [
 
 export const users = pgTable("users", {
     id: uuid("id").defaultRandom().primaryKey(),
+    name: varchar("name", { length: 255 }).notNull().default(""),
     email: varchar("email", { length: 255 }).notNull().unique(),
+    emailVerified: boolean("email_verified").notNull().default(false),
+    image: text("image"),
     firstName: varchar("first_name", { length: 100 }).notNull(),
     lastName: varchar("last_name", { length: 100 }).notNull(),
     role: varchar("role", { length: 50 }).default("sales_rep"),
@@ -88,6 +91,69 @@ export const users = pgTable("users", {
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// ============================================================================
+// AUTH TABLES (Better Auth)
+// ============================================================================
+
+export const authAccounts = pgTable(
+    "auth_accounts",
+    {
+        id: text("id").primaryKey(),
+        providerId: text("provider_id").notNull(),
+        accountId: text("account_id").notNull(),
+        userId: uuid("user_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        accessToken: text("access_token"),
+        refreshToken: text("refresh_token"),
+        idToken: text("id_token"),
+        accessTokenExpiresAt: timestamp("access_token_expires_at"),
+        refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+        scope: text("scope"),
+        password: text("password"),
+        createdAt: timestamp("created_at").defaultNow().notNull(),
+        updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    },
+    (table) => [
+        index("auth_accounts_user_id_idx").on(table.userId),
+        index("auth_accounts_provider_id_idx").on(table.providerId),
+        index("auth_accounts_account_id_idx").on(table.accountId),
+    ]
+);
+
+export const authSessions = pgTable(
+    "auth_sessions",
+    {
+        id: text("id").primaryKey(),
+        token: text("token").notNull().unique(),
+        userId: uuid("user_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        expiresAt: timestamp("expires_at").notNull(),
+        ipAddress: text("ip_address"),
+        userAgent: text("user_agent"),
+        createdAt: timestamp("created_at").defaultNow().notNull(),
+        updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    },
+    (table) => [index("auth_sessions_user_id_idx").on(table.userId)]
+);
+
+export const authVerifications = pgTable(
+    "auth_verifications",
+    {
+        id: text("id").primaryKey(),
+        identifier: text("identifier").notNull(),
+        value: text("value").notNull(),
+        expiresAt: timestamp("expires_at").notNull(),
+        createdAt: timestamp("created_at").defaultNow().notNull(),
+        updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    },
+    (table) => [
+        index("auth_verifications_identifier_idx").on(table.identifier),
+        index("auth_verifications_value_idx").on(table.value),
+    ]
+);
 
 // ============================================================================
 // ACCOUNTS / COMPANIES
@@ -409,11 +475,27 @@ export const dealTags = pgTable(
 // ============================================================================
 
 export const usersRelations = relations(users, ({ many }) => ({
+    authAccounts: many(authAccounts),
+    authSessions: many(authSessions),
     ownedAccounts: many(accounts),
     ownedContacts: many(contacts),
     ownedDeals: many(deals),
     assignedTasks: many(tasks),
     activities: many(activities),
+}));
+
+export const authAccountsRelations = relations(authAccounts, ({ one }) => ({
+    user: one(users, {
+        fields: [authAccounts.userId],
+        references: [users.id],
+    }),
+}));
+
+export const authSessionsRelations = relations(authSessions, ({ one }) => ({
+    user: one(users, {
+        fields: [authSessions.userId],
+        references: [users.id],
+    }),
 }));
 
 export const accountsRelations = relations(accounts, ({ one, many }) => ({
@@ -553,6 +635,15 @@ export const tagsRelations = relations(tags, ({ many }) => ({
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+
+export type AuthAccount = typeof authAccounts.$inferSelect;
+export type NewAuthAccount = typeof authAccounts.$inferInsert;
+
+export type AuthSession = typeof authSessions.$inferSelect;
+export type NewAuthSession = typeof authSessions.$inferInsert;
+
+export type AuthVerification = typeof authVerifications.$inferSelect;
+export type NewAuthVerification = typeof authVerifications.$inferInsert;
 
 export type Account = typeof accounts.$inferSelect;
 export type NewAccount = typeof accounts.$inferInsert;

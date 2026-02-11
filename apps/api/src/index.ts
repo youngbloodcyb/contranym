@@ -8,12 +8,14 @@ import { activities } from "./modules/activities";
 import { tasks } from "./modules/tasks";
 import { notes } from "./modules/notes";
 import { tags } from "./modules/tags";
+import { auth } from "./auth";
 
 const app = new Elysia()
   .use(openapi())
   .get("/", () => {
     return { message: "Hello, World!" };
   })
+  .mount(auth.handler)
   .use(users)
   .use(accounts)
   .use(contacts)
