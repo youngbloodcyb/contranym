@@ -8,6 +8,7 @@ import { activities } from "./modules/activities";
 import { tasks } from "./modules/tasks";
 import { notes } from "./modules/notes";
 import { tags } from "./modules/tags";
+import { webhooks } from "./modules/webhooks";
 
 const app = new Elysia()
   .use(openapi())
@@ -21,6 +22,7 @@ const app = new Elysia()
   .use(activities)
   .use(tasks)
   .use(notes)
-  .use(tags);
+  .use(tags)
+  .use(webhooks);
 
 export default app;
