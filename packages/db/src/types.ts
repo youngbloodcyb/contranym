@@ -1,6 +1,12 @@
 export type {
   User,
   NewUser,
+  AuthAccount,
+  NewAuthAccount,
+  AuthSession,
+  NewAuthSession,
+  AuthVerification,
+  NewAuthVerification,
   Account,
   NewAccount,
   Contact,

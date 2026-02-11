@@ -13,7 +13,12 @@ export const getUserById = async (id: string) => {
 };
 
 export const createUser = async (data: NewUser) => {
-  const [result] = await db.insert(users).values(data).returning();
+  const values =
+    data.name || !data.firstName || !data.lastName
+      ? data
+      : { ...data, name: `${data.firstName} ${data.lastName}`.trim() };
+
+  const [result] = await db.insert(users).values(values).returning();
   return result;
 };
 
